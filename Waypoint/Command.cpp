@@ -37,7 +37,9 @@ void EditorCommands(edict_t *pClient)
 	const char *pszCmd = CMD_ARGV(0);
 
 	if (strcmp(pszCmd, "wp") != 0)
+	{
 		RETURN_META(MRES_IGNORED);
+	}
 
 	pszCmd = CMD_ARGV(1);
 
@@ -69,12 +71,10 @@ void EditorCommands(edict_t *pClient)
 		if (strcmp(pszArg, "node") == 0)
 		{
 			int flags = 0;
-			pszArg = CMD_ARGV(3);
-			if (pszArg[0])
-				flags = atoi(pszArg);
+			if (CMD_ARGC() == 4)
+				flags = atoi(CMD_ARGV(3));
 
 			g_NodeManager.CreateNode(pClient->v.origin, flags);
-
 			CLIENT_PRINTF(pClient, print_console, UTIL_VarArgs("[WP] Create node #%d\n", g_NodeManager.GetNodeSize()));
 		}
 		else if (strcmp(pszArg, "path") == 0)
@@ -84,19 +84,17 @@ void EditorCommands(edict_t *pClient)
 
 			if (pBegin == nullptr || pEnd == nullptr || pBegin == pEnd)
 			{
-				CLIENT_PRINTF(pClient, print_console, "[WP] You must standing on a node and aiming to another node.\n");
+				CLIENT_PRINTF(pClient, print_console, "[WP] You must standing on a node and aiming to the another node.\n");
 			}
 			else
 			{
 				int mode = 0;
-				pszArg = CMD_ARGV(3);
-				if (pszArg[0])
-					mode = atoi(pszArg);
+				if (CMD_ARGC() == 4)
+					mode = atoi(CMD_ARGV(3));
 
 				int flags = 0;
-				pszArg = CMD_ARGV(4);
-				if (pszArg[0])
-					flags = atoi(pszArg);
+				if (CMD_ARGC() == 5)
+					flags = atoi(CMD_ARGV(4));
 
 				if (mode == 0)
 				{
@@ -224,7 +222,7 @@ void EditorCommands(edict_t *pClient)
 	else if (strcmp(pszCmd, "save") == 0)
 	{
 		g_NodeManager.SaveFile(g_pszFilePath);
-		CLIENT_PRINTF(pClient, print_console, UTIL_VarArgs("[WP] Save %d nodes and %d paths to file.\n", g_NodeManager.GetNodeSize(), g_NodeManager.GetPathSize()));
+		CLIENT_PRINTF(pClient, print_console, UTIL_VarArgs("[WP] Save %d nodes and %d paths to the file.\n", g_NodeManager.GetNodeSize(), g_NodeManager.GetPathSize()));
 	}
 	else if (strcmp(pszCmd, "path") == 0)
 	{
@@ -304,125 +302,7 @@ void EditorThink(edict_t* pEditor)
 		{
 			if (gpGlobals->time >= g_AutoTime + 0.1)
 			{
-				if (g_IsJumping)
-				{
-					if (g_pLastNode != nullptr)
-					{
-						Node* pNode = g_NodeManager.GetClosestNode(pEditor->v.origin, 32);
-						if (pNode == nullptr)
-						{
-							pNode = g_NodeManager.CreateNode(pEditor->v.origin, (pEditor->v.flags & FL_DUCKING) ? FL_NODE_DUCK : 0);
-							CLIENT_COMMAND(pEditor, "spk fvox/blip\n");
-						}
-
-						if (g_pLastNode != pNode)
-						{
-							Path* pPath = g_pLastNode->GetPath(pNode);
-							if (pPath == nullptr)
-								pPath = g_NodeManager.CreatePath(g_pLastNode, pNode, 0);
-
-							pPath->SetFlags(pPath->GetFlags() | FL_PATH_JUMP);
-
-							if (g_FallVelocity < 250.0f && pNode->GetPath(g_pLastNode) == nullptr)
-							{
-								g_NodeManager.CreatePath(pNode, g_pLastNode, 0);
-								CLIENT_COMMAND(pEditor, "spk items/medshotno1\n");
-							}
-
-							g_pLastNode = pNode;
-						}
-					}
-				}
-				else if (g_FallVelocity > 200.0f)
-				{
-					if (g_pLastNode != nullptr)
-					{
-						Node* pNode = g_NodeManager.GetClosestNode(pEditor->v.origin, 48);
-						if (pNode == nullptr)
-						{
-							pNode = g_NodeManager.CreateNode(pEditor->v.origin, (pEditor->v.flags & FL_DUCKING) ? FL_NODE_DUCK : 0);
-							CLIENT_COMMAND(pEditor, "spk fvox/blip\n");
-						}
-
-						if (g_pLastNode != pNode)
-						{
-							if (g_pLastNode->GetPath(pNode) == nullptr)
-							{
-								SERVER_PRINT("fall node\n");
-								g_NodeManager.CreatePath(g_pLastNode, pNode, 0);
-								CLIENT_COMMAND(pEditor, "spk items/medshotno1\n");
-							}
-
-							g_pLastNode = pNode;
-						}
-					}
-				}
-				else
-				{
-					Node* pNode = g_NodeManager.GetClosestNode(pEditor->v.origin, 32);
-
-					if (g_pLastNode == nullptr)
-					{
-						if (pNode != nullptr)
-							g_pLastNode = pNode;
-					}
-					else
-					{
-						if (pNode != nullptr)
-						{
-							if ((g_pLastNode->GetPosition() - pNode->GetPosition()).Length() < g_PathDist
-								&& UTIL_IsVisible(g_pLastNode->GetPosition(), pNode->GetPosition(), pEditor, ignore_monsters))
-							{
-								if (g_pLastNode->GetPath(pNode) == nullptr || pNode->GetPath(g_pLastNode) == nullptr)
-								{
-									g_NodeManager.CreatePath(g_pLastNode, pNode, 0);
-									g_NodeManager.CreatePath(pNode, g_pLastNode, 0);
-									CLIENT_COMMAND(pEditor, "spk items/medshotno1\n");
-								}
-							}
-
-							g_pLastNode = pNode;
-						}
-						else
-						{
-							float distance = (g_pLastNode->GetPosition() - pEditor->v.origin).Length();
-							if (distance >= g_NodeDist)
-							{
-								Node* pNode = g_NodeManager.GetClosestNode(pEditor->v.origin, 72);
-								if (pNode == nullptr)
-								{
-									pNode = g_NodeManager.CreateNode(pEditor->v.origin, (pEditor->v.flags & FL_DUCKING) ? FL_NODE_DUCK : 0);
-									CLIENT_COMMAND(pEditor, "spk fvox/blip\n");
-
-									if (distance < g_PathDist && UTIL_IsVisible(g_pLastNode->GetPosition(), pNode->GetPosition(), pEditor, ignore_monsters))
-									{
-										if (g_pLastNode->GetPath(pNode) == nullptr || pNode->GetPath(g_pLastNode) == nullptr)
-										{
-											g_NodeManager.CreatePath(g_pLastNode, pNode, 0);
-											g_NodeManager.CreatePath(pNode, g_pLastNode, 0);
-											CLIENT_COMMAND(pEditor, "spk items/medshotno1\n");
-										}
-									}
-
-									g_pLastNode = pNode;
-								}
-								else if (distance > g_PathDist)
-								{
-									g_pLastNode = nullptr;
-								}
-							}
-						}
-					}
-				}
-
-				g_FallVelocity = 0.0f;
-				g_IsJumping = false;
-				g_AutoTime = gpGlobals->time;
 			}
-		}
-		else
-		{
-			g_FallVelocity = pEditor->v.flFallVelocity;
 		}
 	}
 
@@ -439,7 +319,7 @@ void EditorThink(edict_t* pEditor)
 		for (size_t i = 0; i < max_nodes; i++)
 		{
 			Node *pNode = nullptr;
-			float min_distance = 1000;
+			float min_distance = 1500;
 			std::vector<Node*>::iterator node_iter;
 
 			for (auto iter = nodes.begin(); iter != nodes.end(); iter++)
@@ -617,4 +497,32 @@ void EditorReset()
 	g_pEndNode = nullptr;
 	g_IsJumping = 0;
 	g_FallVelocity = 0.0f;
+}
+
+void DrawNode(edict_t *pEntity, Node* pNode, bool is_current, bool is_aiming)
+{
+	Vector pos = pNode->GetPosition();
+
+	float offset[2];
+	int color[3] = { 0, 255, 0 };
+
+	if (pNode->GetFlags() & FL_NODE_DUCK)
+	{
+		offset[0] = -18;
+		offset[1] = 32;
+	}
+	else
+	{
+		offset[0] = -36;
+		offset[1] = 36;
+	}
+
+	if (pNode->GetFlags() & FL_NODE_JUMP)
+	{
+		color[0] = 0;
+		color[1] = 255;
+		color[2] = 255;
+	}
+
+
 }

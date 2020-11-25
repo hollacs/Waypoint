@@ -91,7 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;HAVE_STDINT_H;WAYPOINT_EXPORTS;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)sdk;$(AMXX)\public;$(AMXX)\public\amtl;$(AMXX)\third_party;$(AMXX)\third_party\hashing;$(METAMOD)\metamod;$(HLSDK)\common;$(HLSDK)\engine;$(HLSDK)\dlls;$(HLSDK)\pm_shared;$(HLSDK)\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)sdk;..\..\SDK\amxmodx\public;..\..\SDK\amxmodx\public\amtl;..\..\SDK\amxmodx\third_party;..\..\SDK\amxmodx\third_party\hashing;..\..\SDK\metamod;..\..\SDK\hlsdk\common;..\..\SDK\hlsdk\engine;..\..\SDK\hlsdk\dlls;..\..\SDK\hlsdk\pm_shared;..\..\SDK\hlsdk\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -99,7 +99,7 @@
       <AdditionalOptions>/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "C:\cs_server\cstrike\addons\amxmodx\modules\$(TargetName).dll"</Command>
+      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "F:\servers\CS\cstrike\addons\amxmodx\modules\$(TargetName).dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;HAVE_STDINT_H;WAYPOINT_EXPORTS;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)sdk;$(AMXX)\public;$(AMXX)\public\amtl;$(AMXX)\third_party;$(AMXX)\third_party\hashing;$(METAMOD)\metamod;$(HLSDK)\common;$(HLSDK)\engine;$(HLSDK)\dlls;$(HLSDK)\pm_shared;$(HLSDK)\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)sdk;..\..\SDK\amxmodx\public;..\..\SDK\amxmodx\public\amtl;..\..\SDK\amxmodx\third_party;..\..\SDK\amxmodx\third_party\hashing;..\..\SDK\metamod;..\..\SDK\hlsdk\common;..\..\SDK\hlsdk\engine;..\..\SDK\hlsdk\dlls;..\..\SDK\hlsdk\pm_shared;..\..\SDK\hlsdk\public;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,7 +132,7 @@
       <AdditionalOptions>/EXPORT:GiveFnptrsToDll=_GiveFnptrsToDll@8,@1 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "C:\cs_server\cstrike\addons\amxmodx\modules\$(TargetName).dll"</Command>
+      <Command>copy /Y "$(TargetDir)$(TargetName).dll" "F:\servers\CS\cstrike\addons\amxmodx\modules\$(TargetName).dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,31 +152,36 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="amxxapi.cpp" />
-    <ClCompile Include="Command.cpp" />
-    <ClCompile Include="PathFinder.cpp" />
-    <ClCompile Include="Waypoint.cpp" />
+    <ClCompile Include="Editor.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="PathFinder.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Module.cpp" />
     <ClCompile Include="NodeManager.cpp" />
     <ClCompile Include="Path.cpp" />
     <ClCompile Include="sdk\amxxmodule.cpp" />
     <ClCompile Include="Node.cpp" />
     <ClCompile Include="Utils.cpp" />
-    <ClCompile Include="waypoint_api\WaypointApi.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="amxxapi.h" />
-    <ClInclude Include="Command.h" />
+    <ClInclude Include="Editor.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="Node.h" />
     <ClInclude Include="NodeManager.h" />
     <ClInclude Include="Path.h" />
-    <ClInclude Include="PathFinder.h" />
+    <ClInclude Include="PathFinder.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="sdk\amxxmodule.h" />
     <ClInclude Include="sdk\moduleconfig.h" />
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="Waypoint.h" />
-    <ClInclude Include="waypoint_api\WaypointApi.h">
-      <DeploymentContent>false</DeploymentContent>
-    </ClInclude>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -12,9 +12,6 @@
     <Filter Include="SDK">
       <UniqueIdentifier>{c3a5d962-5d8e-444f-8868-fa4658b90851}</UniqueIdentifier>
     </Filter>
-    <Filter Include="API">
-      <UniqueIdentifier>{95f1bd50-df51-4d5e-8677-5da57f83509a}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sdk\amxxmodule.cpp">
@@ -26,26 +23,20 @@
     <ClCompile Include="Path.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Command.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="Utils.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="NodeManager.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="Waypoint.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
     <ClCompile Include="PathFinder.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="amxxapi.cpp">
+    <ClCompile Include="Editor.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
-    <ClCompile Include="waypoint_api\WaypointApi.cpp">
-      <Filter>API</Filter>
+    <ClCompile Include="Module.cpp">
+      <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -58,19 +49,10 @@
     <ClInclude Include="Utils.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Command.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="NodeManager.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="Waypoint.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="PathFinder.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="amxxapi.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Node.h">
@@ -79,8 +61,8 @@
     <ClInclude Include="Path.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="waypoint_api\WaypointApi.h">
-      <Filter>API</Filter>
+    <ClInclude Include="Editor.h">
+      <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,41 +1,49 @@
 #pragma once
 
-#include <vector>
+#ifdef WAYPOINT_EXPORTS
+#  define WAYPOINT_API __declspec(dllexport)
+#else
+#  define WAYPOINT_API __declspec(dllimport)
+#endif
 
 #include "extdll.h"
 
-class Node;
-class Path;
+#include "Node.h"
+#include "Path.h"
+
+#define NODE_INDEX(n) GetNodeManager().GetNodeIndex(n)
+#define PATH_INDEX(p) GetNodeManager().GetPathIndex(p)
 
 class NodeManager
 {
 public:
-	Node* CreateNode(const Vector& origin, int flags);
-	void RemoveNode(Node* pNode);
-	Node* GetNodeAt(size_t index) const;
-	int GetNodeIndex(Node* pNode) const;
-	size_t GetNodeSize() const { return m_nodes.size(); }
-	const std::vector<Node*>& GetNodes() const { return m_nodes; }
-	std::vector<Node*>& GetNodes() { return m_nodes; }
-	Node* GetClosestNode(const Vector& origin, float radius, bool visible=false) const;
-	Node* GetClosestNodeInView(const Vector& origin, const Vector& angle, float radius, float fov=90.0f, bool visible = false, bool use_2d = false) const;
-	Node* GetAimNode(edict_t* pEntity, float radius, float max_radius, Node *pIgnoreNode=nullptr) const;
+	std::shared_ptr<Node> CreateNode(const Vector& origin, int flags);
+	void RemoveNode(std::shared_ptr<Node> pNode);
+	WAYPOINT_API std::shared_ptr<Node> GetNodeAt(size_t index);
+	WAYPOINT_API int GetNodeIndex(std::shared_ptr<Node> pNode) const;
+	WAYPOINT_API size_t GetNodeSize() const;
+	const std::vector<std::shared_ptr<Node>>& GetNodes() const;
+	std::vector<std::shared_ptr<Node>>& GetNodes();
+	WAYPOINT_API float GetClosestNode(const Vector& origin, std::shared_ptr<Node>& pResult, float radius=4096.0f, bool visible=false) const;
+	WAYPOINT_API std::shared_ptr<Node> GetAimNode(edict_t* pEntity, float radius, float max_radius, std::shared_ptr<Node> pIgnoreNode=nullptr) const;
 
-	Path* CreatePath(Node* pBegin, Node* pEnd, int flags);
-	void RemovePath(Path* pPath);
-	Path* GetPathAt(size_t index) const;
-	int GetPathIndex(Path* pPath) const;
-	const std::vector<Path*>& GetPaths() const { return m_paths; }
-	std::vector<Path*>& GetPaths() { return m_paths; }
-	size_t GetPathSize() const { return m_paths.size(); }
+	std::shared_ptr<Path> CreatePath(std::shared_ptr<Node> pBegin, std::shared_ptr<Node> pEnd, int flags);
+	void RemovePath(std::shared_ptr<Path> pPath);
+	WAYPOINT_API std::shared_ptr<Path> GetPathAt(size_t index) const;
+	WAYPOINT_API int GetPathIndex(std::shared_ptr<Path> pPath) const;
+	const std::vector<std::shared_ptr<Path>>& GetPaths() const;
+	std::vector<std::shared_ptr<Path>>& GetPaths();
+	WAYPOINT_API size_t GetPathSize() const;
 
 	void Clear();
 
-	void SaveFile(const char* pszFile);
-	void LoadFile(const char* pszFile);
+	bool SaveFile(const char* pszFile);
+	bool LoadFile(const char* pszFile);
 
 private:
-	std::vector<Node*> m_nodes;
-	std::vector<Path*> m_paths;
+	
+	std::vector<std::shared_ptr<Node>> m_nodes;
+	std::vector<std::shared_ptr<Path>> m_paths;
 };
 
+WAYPOINT_API NodeManager& GetNodeManager();

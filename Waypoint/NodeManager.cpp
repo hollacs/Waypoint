@@ -1,164 +1,170 @@
+#include "NodeManager.h"
+
 #include <algorithm>
 #include <sstream>
-#include "NodeManager.h"
+
 #include "meta_api.h"
 
 #include "Node.h"
 #include "Path.h"
 #include "Utils.h"
 
-Node* NodeManager::CreateNode(const Vector& origin, int flags)
+static NodeManager s_NodeManager;
+
+NodeManager& GetNodeManager()
 {
-	Node* pNode = new Node(origin, flags);
+	return s_NodeManager;
+}
+
+std::shared_ptr<Node> NodeManager::CreateNode(const Vector& origin, int flags)
+{
+	auto pNode = std::make_shared<Node>(origin, flags);
 
 	m_nodes.push_back(pNode);
+
 	return pNode;
 }
 
-void NodeManager::RemoveNode(Node* pRemoveNode)
+void NodeManager::RemoveNode(std::shared_ptr<Node> pRemoveNode)
 {
-	for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
-	{
-		Node* pNode = *it;
-		Path* pPath = pNode->GetPath(pRemoveNode);
+	if (pRemoveNode == nullptr)
+		return;
 
-		if (pPath != nullptr)
+	for (auto it = m_paths.begin(); it != m_paths.end(); )
+	{
+		std::shared_ptr<Path> pPath = *it;
+		if (pPath->GetEnd() == pRemoveNode)
 		{
-			RemovePath(pPath);
+			pPath->GetBegin()->RemovePath(pPath);
+			it = m_paths.erase(it);
+		}
+		else
+		{
+			it++;
 		}
 	}
 
-	const auto& paths = pRemoveNode->GetPaths();
-
-	for (auto it = paths.begin(); it != paths.end(); it++)
+	auto paths = pRemoveNode->GetPaths();
+	for (auto it = paths.begin(); it != paths.end();)
 	{
-		m_paths.erase(std::remove(m_paths.begin(), m_paths.end(), *it), m_paths.end());
-		delete *it;
+		this->RemovePath(*it);
+		it = paths.erase(it);
 	}
 
 	m_nodes.erase(std::remove(m_nodes.begin(), m_nodes.end(), pRemoveNode), m_nodes.end());
-	delete pRemoveNode;
 }
 
-Node* NodeManager::GetNodeAt(size_t index) const
+std::shared_ptr<Node> NodeManager::GetNodeAt(size_t index)
 {
 	return m_nodes.at(index);
 }
 
-int NodeManager::GetNodeIndex(Node* pNode) const
+int NodeManager::GetNodeIndex(std::shared_ptr<Node> pNode) const
 {
 	auto iter = std::find(m_nodes.begin(), m_nodes.end(), pNode);
 	if (iter == m_nodes.end())
 		return -1;
 
-	size_t index = std::distance(m_nodes.begin(), iter);
-	return index;
+	return iter - m_nodes.begin();
 }
 
-Node* NodeManager::GetClosestNode(const Vector& origin, float radius, bool visible) const
+size_t NodeManager::GetNodeSize() const
 {
-	Node* pBestNode = nullptr;
-	float min_distance = radius;
-
-	for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
-	{
-		Node* pNode = *it;
-
-		float distance = (pNode->GetPosition() - origin).Length();
-		if (distance < min_distance)
-		{
-			if (visible && UTIL_IsVisible(origin, pNode->GetPosition(), NULL, ignore_monsters))
-			{
-				pBestNode = pNode;
-				min_distance = distance;
-			}
-		}
-	}
-
-	return pBestNode;
+	return m_nodes.size();
 }
 
-Node* NodeManager::GetClosestNodeInView(const Vector& origin, const Vector& angle, float radius, float fov, bool visible, bool use_2d) const
+const std::vector<std::shared_ptr<Node>>& NodeManager::GetNodes() const
 {
-	Node* pBestNode = nullptr;
-	float min_distance = radius;
-
-	for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
-	{
-		Node* pNode = *it;
-
-		float distance = (pNode->GetPosition() - origin).Length();
-		if (distance < min_distance)
-		{
-			if (UTIL_IsInViewCone(origin, angle, pNode->GetPosition(), fov, use_2d))
-			{
-				if (visible && UTIL_IsVisible(origin, pNode->GetPosition(), NULL, ignore_monsters))
-				{
-					pBestNode = pNode;
-					min_distance = distance;
-				}
-			}
-		}
-	}
-
-	return pBestNode;
+	return m_nodes;
 }
 
-Path* NodeManager::CreatePath(Node* pBegin, Node* pEnd, int flags)
+std::vector<std::shared_ptr<Node>>& NodeManager::GetNodes()
 {
-	if (pBegin->GetPath(pEnd) != nullptr)
+	return m_nodes;
+}
+
+std::shared_ptr<Path> NodeManager::CreatePath(std::shared_ptr<Node> pBegin, std::shared_ptr<Node> pEnd, int flags)
+{
+	if (pBegin->GetPath(pEnd) != nullptr || pBegin == nullptr || pEnd == nullptr)
 		return nullptr;
 
-	Path* pPath = new Path(pBegin, pEnd, flags);
-
+	auto pPath = std::make_shared<Path>(pBegin, pEnd, flags);
 	m_paths.push_back(pPath);
-	pBegin->AddPath(pPath);
 
+	pBegin->AddPath(pPath);
 	return pPath;
 }
 
-void NodeManager::RemovePath(Path* pPath)
+void NodeManager::RemovePath(std::shared_ptr<Path> pPath)
 {
 	if (pPath == nullptr)
 		return;
 
 	pPath->GetBegin()->RemovePath(pPath);
 	m_paths.erase(std::remove(m_paths.begin(), m_paths.end(), pPath), m_paths.end());
-	delete pPath;
 }
 
-Path* NodeManager::GetPathAt(size_t index) const
+std::shared_ptr<Path> NodeManager::GetPathAt(size_t index) const
 {
 	return m_paths.at(index);
 }
 
-int NodeManager::GetPathIndex(Path* pPath) const
+int NodeManager::GetPathIndex(std::shared_ptr<Path> pPath) const
 {
 	auto iter = std::find(m_paths.begin(), m_paths.end(), pPath);
 	if (iter == m_paths.end())
 		return -1;
 
-	size_t index = std::distance(m_paths.begin(), iter);
-	return index;
+	return iter - m_paths.begin();
+}
+
+const std::vector<std::shared_ptr<Path>>& NodeManager::GetPaths() const
+{
+	return m_paths;
+}
+
+std::vector<std::shared_ptr<Path>>& NodeManager::GetPaths()
+{
+	return m_paths;
+}
+
+size_t NodeManager::GetPathSize() const
+{
+	return m_paths.size();
 }
 
 void NodeManager::Clear()
 {
-	for (auto it = m_paths.begin(); it != m_paths.end(); it++)
+	for (auto &pNode : m_nodes)
 	{
-		delete *it;
+		pNode->GetPaths().clear();
 	}
 
-	for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
-	{
-		delete *it;
-	}
-
-	m_paths.clear();
 	m_nodes.clear();
+	m_paths.clear();
 }
 
-Node* NodeManager::GetAimNode(edict_t* pEntity, float width, float max_radius, Node *pIgnoreNode) const
+float NodeManager::GetClosestNode(const Vector& origin, std::shared_ptr<Node>& pResult, float radius, bool visible) const
+{
+	float min_distance = radius;
+
+	for (auto& pNode : m_nodes)
+	{
+		float distance = (pNode->GetPosition() - origin).Length();
+		if (distance < min_distance)
+		{
+			if (visible && !UTIL_IsVisible(origin, pNode->GetPosition(), NULL, ignore_monsters))
+				continue;
+
+			pResult = pNode;
+			min_distance = distance;
+		}
+	}
+
+	return min_distance;
+}
+
+std::shared_ptr<Node> NodeManager::GetAimNode(edict_t* pEntity, float width, float max_radius, std::shared_ptr<Node> pIgnoreNode) const
 {
 	Vector start = pEntity->v.origin + pEntity->v.view_ofs;
 	Vector end;
@@ -166,19 +172,20 @@ Node* NodeManager::GetAimNode(edict_t* pEntity, float width, float max_radius, N
 	MAKE_VECTORS(pEntity->v.v_angle);
 	end = start + (gpGlobals->v_forward * 4096);
 
-	Node* pAimNode = nullptr;
+	std::shared_ptr<Node> pAimNode = nullptr;
 	float min_distance = width;
 
-	for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
+	for (auto &pCurrentNode : m_nodes)
 	{
-		Node* pCurrentNode = *it;
-
 		if (pCurrentNode == pIgnoreNode)
 			continue;
 
 		Vector pos = pCurrentNode->GetPosition();
 
 		if ((pos - pEntity->v.origin).Length() > max_radius)
+			continue;
+
+		if (!UTIL_IsVisible(pEntity->v.origin, pos, pEntity, ignore_monsters))
 			continue;
 
 		float distance = UTIL_DistLineSegments(start, end, Vector(pos.x, pos.y, pos.z - 16), Vector(pos.x, pos.y, pos.z + 16));
@@ -192,12 +199,7 @@ Node* NodeManager::GetAimNode(edict_t* pEntity, float width, float max_radius, N
 	return pAimNode;
 }
 
-Node* NodeManager::GetFacingNode(const Vector& origin, const Vector& direction) const
-{
-	return nullptr;
-}
-
-void NodeManager::SaveFile(const char* pszFile)
+bool NodeManager::SaveFile(const char* pszFile)
 {
 	FILE* pFile = fopen(pszFile, "w");
 	if (pFile)
@@ -206,7 +208,7 @@ void NodeManager::SaveFile(const char* pszFile)
 
 		for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
 		{
-			Node* pNode = *it;
+			std::shared_ptr<Node> pNode = *it;
 			Vector pos = pNode->GetPosition();
 
 			fprintf(pFile, "%f %f %f %d\n", pos.x, pos.y, pos.z, pNode->GetFlags());
@@ -216,18 +218,22 @@ void NodeManager::SaveFile(const char* pszFile)
 
 		for (auto it = m_paths.begin(); it != m_paths.end(); it++)
 		{
-			Path* pPath = *it;
-			Node* pBegin = pPath->GetBegin();
-			Node* pEnd = pPath->GetEnd();
+			std::shared_ptr<Path> pPath = *it;
+			std::shared_ptr<Node> pBegin = pPath->GetBegin();
+			std::shared_ptr<Node> pEnd = pPath->GetEnd();
 
-			fprintf(pFile, "%d %d %d\n", GetNodeIndex(pBegin), GetNodeIndex(pEnd), pPath->GetFlags());
+			fprintf(pFile, "%d %d %d\n", NODE_INDEX(pBegin), NODE_INDEX(pEnd), pPath->GetFlags());
 		}
 
 		fclose(pFile);
+
+		return true;
 	}
+
+	return false;
 }
 
-void NodeManager::LoadFile(const char* pszFile)
+bool NodeManager::LoadFile(const char* pszFile)
 {
 	FILE* pFile = fopen(pszFile, "r");
 	if (pFile != NULL)
@@ -272,8 +278,8 @@ void NodeManager::LoadFile(const char* pszFile)
 				std::stringstream ss(szLine);
 				ss >> begin_index >> end_index >> flags;
 
-				Node* pBegin = GetNodeAt(begin_index);
-				Node* pEnd = GetNodeAt(end_index);
+				std::shared_ptr<Node> pBegin = GetNodeAt(begin_index);
+				std::shared_ptr<Node> pEnd = GetNodeAt(end_index);
 
 				if (pBegin != nullptr && pEnd != nullptr)
 					this->CreatePath(pBegin, pEnd, flags);
@@ -281,5 +287,9 @@ void NodeManager::LoadFile(const char* pszFile)
 		}
 
 		fclose(pFile);
+
+		return true;
 	}
+
+	return false;
 }

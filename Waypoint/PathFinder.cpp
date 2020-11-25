@@ -5,25 +5,13 @@
 #include <queue>
 #include <map>
 
-std::vector<Node*> PathFinder::ReconstructPath(PF_Node* pCurrent)
-{
-    std::vector<Node*> result;
-    PF_Node* pParent = pCurrent;
+static PathFinder s_PathFinder;
 
-    while (pParent != nullptr)
-    {
-        result.insert(result.begin(), pParent->m_pNode);
-        pParent = pParent->m_pParent;
-    }
-
-    return result;
-}
-
-bool PathFinder::CalcPath(Node* pStart, Node* pGoal, std::vector<Node*> &result)
+bool PathFinder::CalcPath(std::shared_ptr<Node> pStart, std::shared_ptr<Node> pGoal, PathResult& result)
 {
     auto cmp = [](const PF_Node* pLeft, const PF_Node* pRight) { return pLeft->m_f > pRight->m_f; };
     std::priority_queue<PF_Node*, std::vector<PF_Node*>, decltype(cmp)> open_list(cmp);
-    std::map<Node*, PF_Node> node_map;
+    std::map<std::shared_ptr<Node>, PF_Node> node_map;
 
     node_map[pStart] = PF_Node(pStart, true, (pStart->GetPosition() - pGoal->GetPosition()).Length(), 0.0f);
     open_list.push(&node_map[pStart]);
@@ -44,7 +32,7 @@ bool PathFinder::CalcPath(Node* pStart, Node* pGoal, std::vector<Node*> &result)
 
         for (auto p : paths)
         {
-            Node* pChild = p->GetEnd();
+            std::shared_ptr<Node> pChild = p->GetEnd();
             PF_Node *pNode = nullptr;
 
             float g = g = pCurrent->m_g + (pCurrent->m_pNode->GetPosition() - pChild->GetPosition()).Length();
@@ -76,4 +64,23 @@ bool PathFinder::CalcPath(Node* pStart, Node* pGoal, std::vector<Node*> &result)
     }
 
     return false;
+}
+
+PathResult PathFinder::ReconstructPath(PF_Node* pCurrent)
+{
+    PathResult result;
+    PF_Node* pParent = pCurrent;
+
+    while (pParent != nullptr)
+    {
+        result.insert(result.begin(), pParent->m_pNode);
+        pParent = pParent->m_pParent;
+    }
+
+    return result;
+}
+
+PathFinder& GetPathFinder()
+{
+    return s_PathFinder;
 }

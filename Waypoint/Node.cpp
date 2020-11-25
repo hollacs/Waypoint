@@ -1,5 +1,7 @@
-#include <algorithm>
 #include "Node.h"
+
+#include <algorithm>
+
 #include "Path.h"
 
 Node::Node(const Vector& origin, int flags)
@@ -8,20 +10,25 @@ Node::Node(const Vector& origin, int flags)
 	m_flags = flags;
 }
 
-Path *Node::GetPath(Node* pNode) const
+std::shared_ptr<Path> Node::GetPath(std::shared_ptr<Node> pNode) const
 {
-	auto it = std::find_if(m_paths.begin(), m_paths.end(), 
-		[pNode](const Path* pPath) { return pPath->GetEnd() == pNode; });
+	auto iter = std::find_if(m_paths.begin(), m_paths.end(),
+		[pNode](const std::shared_ptr<Path>& pPath) {
+			return pPath->GetEnd() == pNode;
+		});
 
-	if (it == m_paths.end())
+	if (iter == m_paths.end())
 		return nullptr;
-	
-	return *it;
+
+	return *iter;
 }
 
-void Node::RemovePath(Path* pPath)
+void Node::RemovePath(std::shared_ptr<Path> pRemovePath)
 {
-	m_paths.erase(std::remove(m_paths.begin(), m_paths.end(), pPath), m_paths.end());
+	if (pRemovePath == nullptr)
+		return;
+
+	m_paths.erase(std::remove(m_paths.begin(), m_paths.end(), pRemovePath), m_paths.end());
 }
 
 Vector Node::GetPosition() const
@@ -44,17 +51,20 @@ void Node::SetFlags(int flags)
 	m_flags = flags;
 }
 
-void Node::AddPath(Path* pPath)
+void Node::AddPath(std::shared_ptr<Path> pPath)
 {
+	if (pPath == nullptr)
+		return;
+
 	m_paths.push_back(pPath);
 }
 
-const std::vector<Path*>& Node::GetPaths() const
+const std::vector<std::shared_ptr<Path>>& Node::GetPaths() const
 {
 	return m_paths;
 }
 
-std::vector<Path*>& Node::GetPaths()
+std::vector<std::shared_ptr<Path>>& Node::GetPaths()
 {
 	return m_paths;
 }

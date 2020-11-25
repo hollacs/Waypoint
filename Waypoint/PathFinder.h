@@ -1,18 +1,26 @@
 #pragma once
 
+#ifdef WAYPOINT_EXPORTS
+#  define WAYPOINT_API __declspec(dllexport)
+#else
+#  define WAYPOINT_API __declspec(dllimport)
+#endif
+
 #include <vector>
 
-class Node;
+#include "Node.h"
+
+typedef std::vector<std::weak_ptr<Node>> PathResult;
 
 class PathFinder
 {
 public:
-	bool CalcPath(Node* pStart, Node* pGoal, std::vector<Node*> &result);
+	WAYPOINT_API bool CalcPath(std::shared_ptr<Node> pStart, std::shared_ptr<Node> pGoal, PathResult&result);
 
 private:
 	struct PF_Node
 	{
-		PF_Node(Node* pNode, bool open, float f, float g)
+		PF_Node(std::shared_ptr<Node> pNode, bool open, float f, float g)
 		{
 			m_f = f;
 			m_g = g;
@@ -33,8 +41,10 @@ private:
 		float m_f, m_g;
 		bool m_open;
 		PF_Node* m_pParent;
-		Node* m_pNode;
+		std::shared_ptr<Node> m_pNode;
 	};
 
-	std::vector<Node*> ReconstructPath(PF_Node* pCurrent);
+	PathResult ReconstructPath(PF_Node *pCurrent);
 };
+
+WAYPOINT_API PathFinder& GetPathFinder();
